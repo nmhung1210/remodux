@@ -3,7 +3,7 @@ import { createStore, combineReducers, compose } from 'redux';
 export default class Store {
   constructor(reducers = {}, middlewares = []) {
     this.reducers = reducers;
-    this.store = createStore(this.reducerRoot.bind(this));
+    this.store = createStore((state, action) => this.reducer(state, action));
     this.middlewares = middlewares;
   }
 
@@ -36,10 +36,6 @@ export default class Store {
 
   get middlewares() {
     return this._middlewares || [];
-  }
-
-  reducerRoot(state = {}, action = {}) {
-    return this.reducer(state, action);
   }
 
   dispatch(action) {
