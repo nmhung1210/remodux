@@ -60,3 +60,20 @@ describe('Middleware', () => {
     }).then(user => expect(user).toEqual({ name: 'CCCC' }));
   });
 });
+
+describe('UndoRedo', () => {
+  it('Test UndoRedo', () => {
+    store.useUndoRedo = true;
+    store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'AAAA1111' });
+    expect(store.getState().user).toEqual({ name: 'AAAA1111' });
+
+    store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'AAAA2222' });
+    expect(store.getState().user).toEqual({ name: 'AAAA2222' });
+
+    store.dispatch({ type: 'UNDO' });
+    expect(store.getState().user).toEqual({ name: 'AAAA1111' });
+
+    store.dispatch({ type: 'REDO' });
+    expect(store.getState().user).toEqual({ name: 'AAAA2222' });
+  });
+});
