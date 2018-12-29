@@ -82,7 +82,9 @@ export const undoRedoMiddleware = ({ getState, dispatch }) => {
           }
           for (const key in globalStack) {
             if (globalStack.hasOwnProperty(key) && !isAllowed(key)) {
-              delete globalStack[key];
+              const { past, future } = getStack(key);
+              past.length = 0;
+              future.length = 0;
             }
           }
         }
