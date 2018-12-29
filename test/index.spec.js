@@ -34,6 +34,12 @@ const store = new Store(
   ]
 );
 
+store.subscribe(() => {
+  console.log('subscribe', store.getState());
+});
+
+store.useUndoRedo = true;
+
 describe('Reducer', () => {
   it('Test Reducer', () => {
     expect(store.getState().user).toEqual({ name: 'Test User' });
@@ -70,10 +76,24 @@ describe('UndoRedo', () => {
     store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'AAAA2222' });
     expect(store.getState().user).toEqual({ name: 'AAAA2222' });
 
-    store.dispatch({ type: 'UNDO' });
+    store.dispatch({ type: 'UNDO', key: 'user' });
     expect(store.getState().user).toEqual({ name: 'AAAA1111' });
 
-    store.dispatch({ type: 'REDO' });
+    store.dispatch({ type: 'REDO', key: 'user' });
     expect(store.getState().user).toEqual({ name: 'AAAA2222' });
+
+    store.useUndoRedo = {
+      user: false
+    };
+    store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'BBB' });
+    expect(store.getState().user).toEqual({ name: 'BBB' });
+
+    store.dispatch({ type: 'UNDO', key: 'user' });
+    expect(store.getState().user).toEqual({ name: 'BBB' });
+
+    expect(store.getState().undoRedo.user).toEqual({
+      undoable: false,
+      redoable: false
+    });
   });
 });

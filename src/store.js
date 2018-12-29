@@ -24,10 +24,13 @@ export default class Store {
 
   replaceReducer() {
     this.reducer = (state = {}, action) => {
-      return compose(...this.rootReducers)({
+      return compose(
+        ({ state, action }) => state,
+        ...this.rootReducers
+      )({
         state: combineReducers(this.reducers)(state, action),
         action
-      }).state;
+      });
     };
   }
 
@@ -45,12 +48,13 @@ export default class Store {
   }
 
   get useUndoRedo() {
-    return !!this._useUndoRedo;
+    return this._useUndoRedo;
   }
 
-  set useUndoRedo(val) {
-    if (val === this.useUndoRedo) return;
-    if (val) {
+  // Config can be boolean for all keys. Or array of keys.
+  set useUndoRedo(config) {
+    if (config === this.useUndoRedo) return;
+    if (config && !this.useUndoRedo) {
       const reducers = this.reducers;
       const rootReducers = this.rootReducers;
       const middlewares = this.middlewares;
@@ -60,9 +64,11 @@ export default class Store {
       };
       this.middlewares = [undoRedoMiddleware, ...middlewares];
       this.rootReducers = [rootReduceUndoRedo, ...rootReducers];
-    } else if (this.useUndoRedo) {
-      const { undoRedo, ...reducers } = this.reducers;
-      this.reducers = reducers;
+    }
+    this.dispatch({ type: 'USE_UNDO_REDO', config });
+
+    if (!config && this.useUndoRedo) {
+      // Remove undo redo handles
       this.rootReducers = this.rootReducers.filter(
         reducer => reducer !== rootReduceUndoRedo
       );
@@ -70,6 +76,7 @@ export default class Store {
         middleware => middleware !== undoRedoMiddleware
       );
     }
+    this._useUndoRedo = config;
   }
 
   set middlewares(val) {
