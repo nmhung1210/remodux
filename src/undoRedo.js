@@ -67,28 +67,27 @@ export const undoRedoMiddleware = ({ getState, dispatch }) => {
         }
         break;
       case 'USE_UNDO_REDO':
-        {
-          if (typeof action.config === 'boolean') {
-            config = action.config;
-          } else if (Array.isArray(action.config)) {
-            config = {};
-            action.config.forEach(key => {
-              config[key] = true;
-            });
-          } else if (typeof action.config === 'object') {
-            config = {
-              ...action.config
-            };
-          }
-          for (const key in globalStack) {
-            if (globalStack.hasOwnProperty(key) && !isAllowed(key)) {
-              const { past, future } = getStack(key);
-              past.length = 0;
-              future.length = 0;
-            }
+        if (typeof action.config === 'boolean') {
+          config = action.config;
+        } else if (Array.isArray(action.config)) {
+          config = {};
+          action.config.forEach(key => {
+            config[key] = true;
+          });
+        } else if (typeof action.config === 'object') {
+          config = {
+            ...action.config
+          };
+        }
+        for (const key in globalStack) {
+          if (globalStack.hasOwnProperty(key) && !isAllowed(key)) {
+            const { past, future } = getStack(key);
+            past.length = 0;
+            future.length = 0;
           }
         }
         break;
+
       default:
         {
           const { undoRedo, ...states } = currentState;

@@ -1,3 +1,4 @@
 import Store from './store';
+import Reducer from './reducer';
 
-export { Store };
+export { Store, Reducer };

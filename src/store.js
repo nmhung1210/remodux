@@ -4,6 +4,7 @@ import {
   rootReduceUndoRedo,
   undoRedoMiddleware
 } from './undoRedo';
+
 export default class Store {
   constructor(reducers = {}, middlewares = []) {
     this.reducers = reducers;
@@ -17,8 +18,34 @@ export default class Store {
     this.middlewares = middlewares;
   }
 
+  validateReducers(val) {
+    const reducers = {};
+    // Adding support for Reducer instances.
+    for (const key in val) {
+      if (val.hasOwnProperty(key)) {
+        const reducer = val[key];
+        if (reducer.isReducerInstance) {
+          reducers[key] = reducer.reduce.bind(reducer);
+        } else if (typeof reducer === 'function') {
+          reducers[key] = reducer;
+        } else {
+          throw new Error(
+            `Invalid reducer ${key}! Reducer should be a function!`
+          );
+        }
+
+        if (typeof reducers[key](undefined, {}) !== 'object') {
+          throw new Error(
+            `Invalid reducer ${key}! Reducer must return state object!`
+          );
+        }
+      }
+    }
+    return reducers;
+  }
+
   set reducers(val) {
-    this._reducers = val;
+    this._reducers = this.validateReducers(val);
     this.replaceReducer();
   }
 
@@ -94,7 +121,20 @@ export default class Store {
     };
     const chain = this.middlewares.map(middleware => middleware(middlewareAPI));
     dispatch = compose(...chain)(this._dispatch);
-    this.middleware = dispatch;
+
+    this._dispatchChain = action => {
+      if (
+        (typeof action === 'object' || typeof action === 'function') &&
+        typeof action.then === 'function'
+      ) {
+        // Adding support for redux-promise
+        return action.then(dispatch);
+      } else if (typeof action === 'function') {
+        // Adding support for redux-thunk
+        return action(dispatch, this.store.getState);
+      }
+      return dispatch(action);
+    };
   }
 
   get middlewares() {
@@ -102,7 +142,7 @@ export default class Store {
   }
 
   dispatch(action) {
-    return this.middleware(action);
+    return this._dispatchChain(action);
   }
 
   subscribe(listener) {
