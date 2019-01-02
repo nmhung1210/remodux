@@ -1,16 +1,15 @@
 import { createStore, combineReducers, compose } from 'redux';
-import {
-  reduceUndoRedo,
-  rootReduceUndoRedo,
-  undoRedoMiddleware
-} from './undoRedo';
+import { rootReduceUndoRedo, undoRedoMiddleware } from './undoRedo';
+import { Reducer } from './reducer';
 
 export default class Store {
   constructor(reducers = {}, middlewares = []) {
     this.reducers = reducers;
+    this.rootReducers = [];
     this.store = createStore(
       (state, action) => this.reducer(state, action),
-      window.__REDUX_DEVTOOLS_EXTENSION__ &&
+      typeof window !== 'undefined' &&
+        window.__REDUX_DEVTOOLS_EXTENSION__ &&
         window.__REDUX_DEVTOOLS_EXTENSION__()
     );
     this._dispatch = this.store.dispatch;
@@ -25,9 +24,12 @@ export default class Store {
       if (val.hasOwnProperty(key)) {
         const reducer = val[key];
         if (reducer.isReducerInstance) {
+          reducer.connectStore(this.store, key);
           reducers[key] = reducer.reduce.bind(reducer);
         } else if (typeof reducer === 'function') {
           reducers[key] = reducer;
+        } else if (typeof reducer === 'object') {
+          reducers[key] = Reducer.createFromObject(reducer)(key);
         } else {
           throw new Error(
             `Invalid reducer ${key}! Reducer should be a function!`
@@ -51,13 +53,10 @@ export default class Store {
 
   replaceReducer() {
     this.reducer = (state = {}, action) => {
-      return compose(
-        ({ state, action }) => state,
-        ...this.rootReducers
-      )({
-        state: combineReducers(this.reducers)(state, action),
-        action
-      });
+      const rootReducers = this.rootReducers.map(reducer => reducer(action));
+      return compose(...rootReducers)(
+        combineReducers(this.reducers)(state, action)
+      );
     };
   }
 
@@ -66,7 +65,7 @@ export default class Store {
   }
 
   set rootReducers(val) {
-    this._rootReducers = val;
+    this._rootReducers = [rootReduceUndoRedo, ...val];
     this.replaceReducer();
   }
 
@@ -74,40 +73,8 @@ export default class Store {
     return this._rootReducers || [];
   }
 
-  get useUndoRedo() {
-    return this._useUndoRedo;
-  }
-
-  // Config can be boolean for all keys. Or array of keys.
-  set useUndoRedo(config) {
-    if (config === this.useUndoRedo) return;
-    if (config && !this.useUndoRedo) {
-      const reducers = this.reducers;
-      const rootReducers = this.rootReducers;
-      const middlewares = this.middlewares;
-      this.reducers = {
-        ...reducers,
-        undoRedo: reduceUndoRedo
-      };
-      this.middlewares = [undoRedoMiddleware, ...middlewares];
-      this.rootReducers = [rootReduceUndoRedo, ...rootReducers];
-    }
-    this.dispatch({ type: 'USE_UNDO_REDO', config });
-
-    if (!config && this.useUndoRedo) {
-      // Remove undo redo handles
-      this.rootReducers = this.rootReducers.filter(
-        reducer => reducer !== rootReduceUndoRedo
-      );
-      this.middlewares = this.middlewares.filter(
-        middleware => middleware !== undoRedoMiddleware
-      );
-    }
-    this._useUndoRedo = config;
-  }
-
   set middlewares(val) {
-    this._middlewares = val;
+    this._middlewares = [undoRedoMiddleware, ...val];
     let dispatch = () => {
       throw new Error(
         `Dispatching while constructing your middleware is not allowed. ` +

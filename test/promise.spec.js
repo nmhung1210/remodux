@@ -2,7 +2,7 @@ import { Store, Reducer } from '../src/index';
 
 class UserReducer extends Reducer {
   constructor() {
-    super('user', {
+    super({
       name: 'Test User'
     });
   }

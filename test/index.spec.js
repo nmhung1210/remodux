@@ -68,30 +68,115 @@ describe('Middleware', () => {
 });
 
 describe('UndoRedo', () => {
-  it('Test UndoRedo', () => {
-    store.useUndoRedo = true;
+  it('UndoRedo Setup', () => {
+    store.dispatch({ type: 'USE_UNDO_REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'CCCC',
+      undoable: false,
+      redoable: false
+    });
+
     store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'AAAA1111' });
-    expect(store.getState().user).toEqual({ name: 'AAAA1111' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA1111',
+      undoable: true,
+      redoable: false
+    });
 
     store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'AAAA2222' });
-    expect(store.getState().user).toEqual({ name: 'AAAA2222' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: true,
+      redoable: false
+    });
 
-    store.dispatch({ type: 'UNDO', key: 'user' });
-    expect(store.getState().user).toEqual({ name: 'AAAA1111' });
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA1111',
+      undoable: true,
+      redoable: true
+    });
 
-    store.dispatch({ type: 'REDO', key: 'user' });
-    expect(store.getState().user).toEqual({ name: 'AAAA2222' });
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: true,
+      redoable: false
+    });
 
-    store.useUndoRedo = {
-      user: false
-    };
-    store.dispatch({ type: 'CHANGE_NAME_MIDDLE', name: 'BBB' });
-    expect(store.getState().user).toEqual({ name: 'BBB' });
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA1111',
+      undoable: true,
+      redoable: true
+    });
 
-    store.dispatch({ type: 'UNDO', key: 'user' });
-    expect(store.getState().user).toEqual({ name: 'BBB' });
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'CCCC',
+      undoable: false,
+      redoable: true
+    });
 
-    expect(store.getState().undoRedo.user).toEqual({
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'CCCC',
+      undoable: false,
+      redoable: true
+    });
+
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'CCCC',
+      undoable: false,
+      redoable: true
+    });
+
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA1111',
+      undoable: true,
+      redoable: true
+    });
+
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: true,
+      redoable: false
+    });
+
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: true,
+      redoable: false
+    });
+
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: true,
+      redoable: false
+    });
+
+    store.dispatch({ type: 'RESET_UNDO_REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: false,
+      redoable: false
+    });
+
+    store.dispatch({ type: 'UNDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
+      undoable: false,
+      redoable: false
+    });
+
+    store.dispatch({ type: 'REDO', reducer: 'user' });
+    expect(store.getState().user).toEqual({
+      name: 'AAAA2222',
       undoable: false,
       redoable: false
     });

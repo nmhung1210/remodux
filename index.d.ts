@@ -14,7 +14,7 @@ declare module 'remodux' {
   }
 
   export class Reducer {
-    constructor(name: string, defaultState?: any);
+    constructor(defaultState?: any);
     readonly state: any;
     readonly name: string;
     setState(state: any): void;
