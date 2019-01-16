@@ -49,7 +49,7 @@ export class Reducer {
     }
     this._store = store;
     this._name = name;
-    this.onReady();
+    setTimeout(() => this.onReady(), 0);
   }
 
   get store() {
