@@ -24,7 +24,7 @@ export default class Store {
       if (val.hasOwnProperty(key)) {
         const reducer = val[key];
         if (reducer.isReducerInstance) {
-          reducer.connectStore(this.store, key);
+          reducer.connectStore(this, key);
           reducers[key] = reducer.reduce.bind(reducer);
         } else if (typeof reducer === 'function') {
           reducers[key] = reducer;

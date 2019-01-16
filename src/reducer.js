@@ -70,6 +70,7 @@ export class Reducer {
       if (
         fname === 'name' ||
         fname === 'state' ||
+        fname === 'store' ||
         fname === 'setState' ||
         fname === 'isReducerInstance' ||
         fname === 'connectStore' ||
