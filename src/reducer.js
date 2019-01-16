@@ -44,9 +44,23 @@ export class Reducer {
   }
 
   connectStore(store, name) {
+    if (this._store) {
+      throw new Error('Store already connected!');
+    }
     this._store = store;
     this._name = name;
+    this.onReady();
   }
+
+  get store() {
+    return this._store;
+  }
+
+  set store(val) {
+    throw new Error('Store is readonly!');
+  }
+
+  onReady() {}
 
   reduce(state, action) {
     this._state = state || this.state;
@@ -59,6 +73,7 @@ export class Reducer {
         fname === 'setState' ||
         fname === 'isReducerInstance' ||
         fname === 'connectStore' ||
+        fname === 'onReady' ||
         fname === 'reduce'
       ) {
         throw new Error(

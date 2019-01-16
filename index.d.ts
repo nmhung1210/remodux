@@ -17,6 +17,8 @@ declare module 'remodux' {
     constructor(defaultState?: any);
     readonly state: any;
     readonly name: string;
+    readonly store: any;
+    protected onReady(): void;
     setState(state: any): void;
   }
 }
